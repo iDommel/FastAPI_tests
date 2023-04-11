@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from mutagen import File as MutagenFile
 import uvicorn
 import librosa
@@ -46,10 +46,22 @@ class Service:
 
     async def process_audio(self, file: UploadFile = File(...)):
         # Create a temporary file to store the uploaded file
+        if not file.content_type.startswith("audio/mpeg"):
+            raise HTTPException(
+                status_code=400, detail="File must be an mp3 audio file."
+            )
+
         with tempfile.NamedTemporaryFile(delete=False) as tmp_audio_file:
             # Save the uploaded file to the temporary file
             content = await file.read()
             tmp_audio_file.write(content)
+
+            # Gets the length of the audio, in seconds
+            audio_length = librosa.get_duration(filename=tmp_audio_file.name)
+            if audio_length > 600:
+                raise HTTPException(
+                    status_code=400, detail="Audio must be less than 10 minutes."
+                )
 
             # Load the audio file using librosa
             audio, sr = librosa.load(tmp_audio_file.name)
