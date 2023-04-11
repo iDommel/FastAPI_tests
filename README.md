@@ -1,10 +1,12 @@
 # FastAPI_tests
 ## Installing dependecies
 To install dependencies for this project, run:
->`pip install -r ./requirements.txt`
+
+`pip install -r ./requirements.txt`
 
 Then run the project with:
->`python 3 ./main.py`
+
+`python 3 ./main.py`
 ## Environment
 You can provide the following environment variables inside a .env file:
 
