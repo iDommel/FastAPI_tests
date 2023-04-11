@@ -7,3 +7,4 @@ librosa
 pydantic[dotenv]
 pytest
 httpx
+midiutil

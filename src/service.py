@@ -1,10 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import FileResponse
 import uvicorn
 import librosa
 import tempfile
 import soundfile as sf
 import logging
+from midiutil import MIDIFile
 
 
 class Service:
@@ -20,6 +21,7 @@ class Service:
 
         # Initialize the routes
         self.app.post("/half_mp3")(self.process_audio)
+        self.app.get("/midi")(self.generate_midi)
         self.app.get("/")(self.read_root)
 
     def run(self):
@@ -62,3 +64,26 @@ class Service:
 
                 # Return the new file to the user
                 return FileResponse(tmp_audio_half_file.name, media_type="audio/mpeg")
+
+    async def generate_midi(self):
+        with tempfile.NamedTemporaryFile(suffix=".mid", delete=False) as temp_file:
+            # create a MIDIFile object with one track
+            midi_file = MIDIFile(1)
+
+            # set the tempo (in BPM)
+            midi_file.addTempo(0, 0, 120)
+
+            # add some notes to the track
+            channel = 0
+            time = 0
+            for pitch in [60, 62, 64, 65, 67, 69, 71, 72]:
+                duration = 1
+                midi_file.addNote(channel, channel, pitch, time, duration, 100)
+                time += 1
+
+            # write the MIDI file to the temporary file
+            midi_file.writeFile(temp_file)
+
+            # read the MIDI file as bytes
+            temp_file.seek(0)
+            return FileResponse(temp_file.name, media_type="audio/midi")
