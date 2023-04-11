@@ -2,9 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import StreamingResponse, FileResponse
 import uvicorn
 import librosa
-import io
 import tempfile
-import os
 import soundfile as sf
 import logging
 
