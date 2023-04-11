@@ -22,9 +22,9 @@ class Service:
         self.app.on_event("shutdown")(self.close)
 
         # Initialize the routes
-        self.app.post("/mp3")(self.process_audio)
-        self.app.get("/midi")(self.generate_midi)
-        self.app.post("/pdf")(self.metadata_to_pdf)
+        self.app.post("/mp3", status_code=201)(self.process_audio)
+        self.app.get("/midi", status_code=201)(self.generate_midi)
+        self.app.post("/pdf", status_code=201)(self.metadata_to_pdf)
         self.app.get("/")(self.read_root)
 
     def run(self):
