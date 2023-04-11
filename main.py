@@ -1,71 +1,32 @@
-from fastapi import FastAPI, File, UploadFile
-from pydub import AudioSegment, exceptions
-from io import BytesIO
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import StreamingResponse, FileResponse
+import librosa
+import io
+import tempfile
+import os
+import soundfile as sf
 
 app = FastAPI()
 
-@app.post("/process_audio")
+
+@app.post("/half_mp3")
 async def process_audio(file: UploadFile = File(...)):
-    try:
-        # Read the file content into memory
+    # Save the uploaded file on disk
+    file_path = f"uploads/{file.filename}"
+    with open(file_path, "wb") as audio_file:
         content = await file.read()
+        audio_file.write(content)
 
-        # Load the audio file from memory using pydub
-        audio = AudioSegment.from_file(BytesIO(content))
+    # Load the audio file using librosa
+    audio, sr = librosa.load(file_path)
 
-        # Apply some basic editing (e.g. reverse the audio)
-        edited_audio = audio.reverse()
+    # Split the audio file in half
+    split_point = len(audio) // 2
+    audio_first_half = audio[:split_point]
 
-        # Write the edited audio file to memory
-        output = BytesIO()
-        edited_audio.export(output, format="mp3")
+    # Save the first half of the audio file to disk
+    new_file_path = f"uploads/{os.path.splitext(file.filename)[0]}_half{os.path.splitext(file.filename)[1]}"
+    sf.write(new_file_path, audio_first_half, sr)
 
-        # Return the edited audio file as a response
-        return output.getvalue()
-    except FileNotFoundError:
-        return {"message": "The file was not found."}
-    except exceptions.CouldntDecodeError:
-        return {"message": "The audio file could not be decoded. Please check the file format and try again."}
-    except Exception as e:
-        print("Error:", e)
-        print("Request payload:", file)
-        return {"message": "Error processing audio file."}
-
-@app.post("/identical_audio")
-async def process_audio(file: UploadFile = File(...)):
-    try:
-        # Read the file content into memory
-        print("reading file:", file);
-        content = await file.read()
-        # Return the original file as a streaming response
-        return StreamingResponse(BytesIO(content), media_type=file.content_type)
-    except Exception as e:
-        print("Error:", e)
-        print("Request payload:", file)
-        return {"message": "Error processing audio file."}
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.post("/uploadfile/")
-async def create_upload_file(file: UploadFile):
-    return {"filename": file.filename}
-
-@app.post("/upload")
-async def upload(file: UploadFile = File(...)):
-    try:
-        contents = await file.read()
-
-        mybytes = BytesIO(content)
-        with open(file.filename, 'wb') as f:
-            f.write(contents)
-    except FileNotFoundError:
-        return {"message": "The file was not found."}
-    except exceptions.CouldntDecodeError:
-        return {"message": "The audio file could not be decoded. Please check the file format and try again."}
-    except Exception as e:
-        return {"message": "There was an error uploading the file"}
-    finally:
-        await file.close()
+    # Return the new file to the user
+    return FileResponse(new_file_path, media_type="audio/mpeg")

@@ -1,4 +1,6 @@
 fastapi
 uvicorn
-pydub
 python-multipart
+mutagen
+black
+librosa
