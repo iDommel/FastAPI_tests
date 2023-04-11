@@ -1,10 +1,12 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
+from mutagen import File as MutagenFile
 import uvicorn
 import librosa
 import tempfile
 import soundfile as sf
 import logging
+from reportlab.pdfgen import canvas
 from midiutil import MIDIFile
 
 
@@ -20,8 +22,9 @@ class Service:
         self.app.on_event("shutdown")(self.close)
 
         # Initialize the routes
-        self.app.post("/half_mp3")(self.process_audio)
+        self.app.post("/mp3")(self.process_audio)
         self.app.get("/midi")(self.generate_midi)
+        self.app.post("/pdf")(self.metadata_to_pdf)
         self.app.get("/")(self.read_root)
 
     def run(self):
@@ -87,3 +90,28 @@ class Service:
             # read the MIDI file as bytes
             temp_file.seek(0)
             return FileResponse(temp_file.name, media_type="audio/midi")
+
+    async def metadata_to_pdf(self, file: UploadFile = File(...)):
+        if not file.content_type.startswith("audio/mpeg"):
+            raise HTTPException(
+                status_code=400, detail="File must be an mp3 audio file."
+            )
+
+        audio = MutagenFile(file.file)
+        title = audio.get("TIT2").text[0] if audio.get("TIT2") else ""
+        artist = audio.get("TPE1").text[0] if audio.get("TPE1") else ""
+        album = audio.get("TALB").text[0] if audio.get("TALB") else ""
+        year = audio.get("TDRC").text[0].split("-")[0] if audio.get("TDRC") else ""
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+            pdf_filename = temp_file.name
+
+            c = canvas.Canvas(temp_file)
+            c.drawString(72, 740, f"FileName: {file.filename}")
+            c.drawString(72, 720, f"Title: {title}")
+            c.drawString(72, 700, f"Artist: {artist}")
+            c.drawString(72, 680, f"Album: {album}")
+            c.drawString(72, 660, f"Year: {year}")
+            c.save()
+
+        return FileResponse(pdf_filename, filename=f"{title} - {artist}.pdf")
