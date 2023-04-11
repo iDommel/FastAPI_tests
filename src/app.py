@@ -5,6 +5,7 @@ import io
 import tempfile
 import os
 import soundfile as sf
+import logging
 
 
 class App:
