@@ -26,7 +26,9 @@ class Service:
 
     def run(self):
         config = uvicorn.Config(
-            app=self.app, host=self.service_host, port=self.service_port
+            app=self.app,
+            host=self.service_host,
+            port=self.service_port,
         )
         server = uvicorn.Server(config)
         server.run()

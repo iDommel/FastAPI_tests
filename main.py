@@ -1,5 +1,11 @@
 from src.service import Service
 from src.settings import Settings
+from functools import lru_cache
+
+
+@lru_cache()
+def get_settings():
+    return Settings()
 
 
 def main():
