@@ -6,7 +6,7 @@ To install dependencies for this project, run:
 
 Then run the project with:
 
-`python 3 ./main.py`
+`python3 ./main.py`
 ## Environment
 You can provide the following environment variables inside a .env file:
 
