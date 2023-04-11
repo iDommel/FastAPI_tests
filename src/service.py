@@ -29,9 +29,6 @@ class Service:
             app=self.app, host=self.service_host, port=self.service_port
         )
         server = uvicorn.Server(config)
-        print("Starting the app.")
-        print("Service host: ", self.service_host)
-        print("Service port: ", self.service_port)
         server.run()
 
     async def close(self):
