@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import StreamingResponse, FileResponse
+import uvicorn
 import librosa
 import io
 import tempfile
@@ -8,12 +9,30 @@ import soundfile as sf
 import logging
 
 
-class App:
-    def __init__(self):
-        self.api = FastAPI()
-        self.api.post("/half_mp3")(self.process_audio)
-        self.api.get("/")(self.read_root)
-        self.api.on_event("shutdown")(self.close)
+class Service:
+    def __init__(
+        self,
+        service_host: str,
+        service_port: int,
+    ):
+        self.service_host = service_host
+        self.service_port = service_port
+        self.app = FastAPI()
+        self.app.on_event("shutdown")(self.close)
+
+        # Initialize the routes
+        self.app.post("/half_mp3")(self.process_audio)
+        self.app.get("/")(self.read_root)
+
+    def run(self):
+        config = uvicorn.Config(
+            app=self.app, host=self.service_host, port=self.service_port
+        )
+        server = uvicorn.Server(config)
+        print("Starting the app.")
+        print("Service host: ", self.service_host)
+        print("Service port: ", self.service_port)
+        server.run()
 
     async def close(self):
         """Gracefull shutdown."""

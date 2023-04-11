@@ -1,11 +1,12 @@
-from src.app import App
-import uvicorn
+from src.service import Service
+from src.settings import Settings
 
 
-# write a main funciton that calls app
 def main():
-    app = App()
-    uvicorn.run(app.api)
+    settings = Settings()
+    service = Service(settings.service_host, settings.service_port)
+
+    service.run()
 
 
 if __name__ == "__main__":
