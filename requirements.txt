@@ -6,6 +6,7 @@ black
 librosa
 pydantic[dotenv]
 pytest
+coverage
 httpx
 midiutil
 reportlab
