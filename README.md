@@ -15,3 +15,13 @@ SERVICE_HOST=           # The url where the server should run. 127.0.0.1 by defa
 
 SERVICE_PORT=           # The Port where the server should listen. 8000 by default
 ```
+
+## Testing
+
+Test using
+
+`coverage run -m pytest`
+
+and get coverage with:
+
+`coverage report`
